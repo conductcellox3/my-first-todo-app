@@ -2,21 +2,45 @@
 
 import { useState } from "react"
 
+//GTD settings
+type GTDStatus = 'Inbox' | 'NextAction' | 'Waiting' | 'Someday' | 'Completed';
+type TodoItem = {
+  id: number;
+  text: string;
+  status: GTDStatus;
+};
+
 export default function Home() {
-  const [todos, setTodos] = useState<string[]>([])
+  const [todos, setTodos] = useState<TodoItem[]>([])
   const [input, setInput] = useState('')
 
   //Add Todo item
   const addTodo = () => {
-    if (!input.trim()) return
-    setTodos([...todos, input])
-    setInput('')
-  }
+    if (!input.trim()) return;
+
+    const newTodo: TodoItem = {
+      id: Date.now(),//set simple ID from date info
+      text: input,
+      status: 'Inbox',
+    };
+
+    setTodos([...todos, newTodo]);
+    setInput('');
+  };
+
+  //change GTD status
+  const updateStatus = (id:number, newStatus: GTDStatus) => {
+    setTodos(
+      todos.map(todo =>
+        todo.id === id ? { ...todo, status:newStatus} : todo
+      )
+    );
+  };
 
   //Delete Todo item
   const deleteTodo = (index: number) => {
-    setTodos(todos.filter((_, i) => i !== index))
-  }
+    setTodos(todos.filter(todo => todo.id !== index));
+  };
 
   return (
     <div className="max-w-xl mx-auto py-10">
@@ -41,14 +65,27 @@ export default function Home() {
 
       {/*TODOリスト*/}
       <ul>
-        {todos.map((todo, index) => (
-          <li key={index} className="flex items-center justify-between border-b py-2">
-            <span>{todo}</span>
+        {todos.map((todo) => (
+          <li key={todo.id} className="flex items-center justify-between border-b py-2">
+            <div>
+              <p>{todo.text}</p>
+              <select
+              className="border rounded text-sm"
+              value={todo.status}
+              onChange={(e) => updateStatus(todo.id, e.target.value as GTDStatus)}>
+                <option value="Inbox">Inbox</option>
+                <option value="NextAction">Next Action</option>
+                <option value="Waiting">Waiting</option>
+                <option value="Someday">Sameday</option>
+                <option value="Completed">Completed</option>
+              </select>
+            </div>
             <button
             className="text-red-500"
-            onClick={() => deleteTodo(index)}>
+            onClick={() => deleteTodo(todo.id)}>
               削除
             </button>
+
           </li>
 
         ))}
