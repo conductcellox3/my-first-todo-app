@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from "react"
+import { useEffect } from "react";
 
 //GTD settings
 type GTDStatus = 'Inbox' | 'NextAction' | 'Waiting' | 'Someday' | 'Completed';
@@ -13,6 +14,7 @@ type TodoItem = {
 export default function Home() {
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [input, setInput] = useState('')
+  const [selectedStatus, setSelectedStatus] = useState<GTDStatus>('Inbox')
 
   //Add Todo item
   const addTodo = () => {
@@ -42,6 +44,11 @@ export default function Home() {
     setTodos(todos.filter(todo => todo.id !== index));
   };
 
+  //todos logging on browser F12
+  useEffect(() => {
+    console.log("現在のtodos:", todos)
+  }, [todos])
+
   return (
     <div className="max-w-xl mx-auto py-10">
       <h1 className="text-3xl font-bold mb-6">
@@ -63,14 +70,31 @@ export default function Home() {
         </button>
       </div>
 
-      {/*TODOリスト*/}
+      {/* タブ */}
+      <div className="flex mb-4 space-x-2">
+        {(['Inbox', 'NextAction', 'Waiting', 'Someday', 'Compleded'] as GTDStatus[]).map(status => {
+          const count = todos.filter(todo => todo.status === status).length
+
+          return(
+            <button
+            key={status}
+            className={`px-3 py-2 rounded ${selectedStatus === status ? 'bg-blue-500 text-white' : 'bg-gray-200'}`}
+            onClick={() => setSelectedStatus(status)}
+            >
+              {status}({count})
+            </button>
+        )
+      })}
+      </div>
+
+      {/*TODO表示*/}
       <ul>
-        {todos.map((todo) => (
-          <li key={todo.id} className="flex items-center justify-between border-b py-2">
-            <div>
-              <p>{todo.text}</p>
+        {todos.filter(todo => todo.status === selectedStatus).map((todo) => (
+          <li key={todo.id} className="border-b py-2">
+            <div className="flex items-center justify-between">
+
               <select
-              className="border rounded text-sm"
+              className="border rounded px-2 py-1"
               value={todo.status}
               onChange={(e) => updateStatus(todo.id, e.target.value as GTDStatus)}>
                 <option value="Inbox">Inbox</option>
@@ -79,13 +103,14 @@ export default function Home() {
                 <option value="Someday">Sameday</option>
                 <option value="Completed">Completed</option>
               </select>
+            
+              <span className="flex-1 text-left ml-4 break-words">{todo.text}</span>
+              <button
+              className="text-red-500"
+              onClick={() => deleteTodo(todo.id)}>
+                削除
+              </button>
             </div>
-            <button
-            className="text-red-500"
-            onClick={() => deleteTodo(todo.id)}>
-              削除
-            </button>
-
           </li>
 
         ))}
